@@ -104,5 +104,5 @@ private fun extractFile(inputStream: InputStream, destFilePath: String) {
 }
 
 private fun csvToJson(csv: List<Map<String, String>>): List<JsonNode> {
-    return csv.map { it.map { entry -> jObject { entry.key += entry.value } }.asJson() }.flatten()
+    return csv.map { jObject { it.forEach { entry ->  entry.key += entry.value } }.asJson() }
 }
