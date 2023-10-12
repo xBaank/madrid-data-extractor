@@ -47,6 +47,15 @@ tasks {
                 sourcesMain.output
         from(contents)
     }
+    startScripts {
+        dependsOn(fatJar) // Trigger fat jar creation during build
+    }
+    distTar {
+        dependsOn(fatJar) // Trigger fat jar creation during build
+    }
+    distZip {
+        dependsOn(fatJar) // Trigger fat jar creation during build
+    }
     build {
         dependsOn(fatJar) // Trigger fat jar creation during build
     }
