@@ -76,11 +76,15 @@ class StopsCommand : CliktCommand() {
                             it["stop_id"].asString().bind().substringAfter("_").substringBefore("_").toInt()
                     }
                     .onEach {
-                        it["stop_code"] = it["stop_code"].asString().map(String::trim).map(String::toInt).bind()
+                        it["stop_code"] = it["stop_code"].asString().map(String::trim).bind()
                     }
                     .onEach {
                         it["full_stop_code"] =
-                            it["cod_mode"].asNumber().bind().toString() + "_" + it["stop_code"].asNumber().bind()
+                            it["cod_mode"].asNumber().bind().toString() + "_" + it["stop_code"].asString().bind()
+                    }
+                    .onEach {
+                        it["stop_lat"] = it["stop_lat"].asString().map(String::toDouble).bind()
+                        it["stop_lon"] = it["stop_lon"].asString().map(String::toDouble).bind()
                     }
                     //This a hack to remove duplicates, since the same stop on metro can be repeated with different names
                     .distinctBy {
