@@ -57,11 +57,13 @@ fun main(): Unit = runBlocking {
     }.flatten().asJson()
 
 
-    //write jsons
+    //write json
     val file = File("stops.json")
     file.parentFile?.mkdirs()
     file.createNewFile()
     file.outputStream().use { jsons.serialized().byteInputStream().copyTo(it) }
+
+    //TODO transform json to add more properties and cleanup
 
     //cleanup
     File("temp").deleteRecursively()
