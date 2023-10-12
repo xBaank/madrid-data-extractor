@@ -18,6 +18,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     implementation("com.github.ajalt.clikt:clikt:4.2.1")
+    implementation("io.arrow-kt:arrow-core:1.1.5")
     testImplementation(kotlin("test"))
 }
 
