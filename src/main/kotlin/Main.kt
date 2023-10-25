@@ -12,6 +12,7 @@ val httpClient = HttpClient.newHttpClient()
 fun main(args: Array<String>) {
     StopsCommand().main(args)
     StopsInfoCommand().main(args)
+    ItineariesCommand().main(args)
 }
 
 fun csvToJson(csv: List<Map<String, String>>): List<JsonNode> {
