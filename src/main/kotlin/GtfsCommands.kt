@@ -84,8 +84,18 @@ class GtfsCommands : CliktCommand() {
                     csvReader { escapeChar = '\'' }.readAllWithHeader(File("temp/$id/trips.txt")).let(::csvToJson)
                 }.flatten().asJson()
 
+            val stopsPerItineraryJson = streams
+                .filter { (id, _) -> id in itinerariesIds }
+                .map { (id, _) ->
+                    println("Reading temp/$id/stop_times.txt")
+                    val csv = File("temp/$id/stop_times.txt").useLines {
+                        it.mapNotNull { it.ifBlank { null } }.joinToString("\n")
+                    }
+                    csvReader { escapeChar = '\'' }.readAllWithHeader(csv).let(::csvToJson)
+                }.flatten().asJson()
+
             val stops = extractStops(stopsJson)
-            val itineraries = extractItineraries(itinerariesJson)
+            val itineraries = extractItineraries(itinerariesJson, stopsPerItineraryJson)
 
 
             stops.fold(
@@ -119,20 +129,44 @@ class GtfsCommands : CliktCommand() {
         }
     }
 
-    private suspend fun extractItineraries(json: JsonArray): Either<JsonException, JsonArray> = either {
+    private suspend fun extractItineraries(json: JsonArray, stopsPerItineraryJson: JsonArray): Either<JsonException, JsonArray> = either {
+        println("Extracting itineraries")
         json
-            .mapNotNull {
+            .mapAsync {
                 jObject {
+                    "tripId" += it["trip_id"].asString().bind()
                     "itineraryCode" += it["shape_id"].asString().bind()
                     "lineCode" += it["route_id"].asString().bind()
                     "direction" += it["direction_id"].asString().bind().toInt()
                 }
             }
-            .distinct()
+            .distinctBy {
+                Triple(it["itineraryCode"], it["lineCode"], it["direction"])
+            }
+            .onEachIndexedAsync { index, count, it ->
+                val percentage = ((index.toDouble() / count.toDouble()) * 100).toInt()
+                println("Extracting $index/$count --- $percentage%")
+
+                val node = it as JsonNode
+                val tripId = node["tripId"].asString().bind()
+                val stops = stopsPerItineraryJson.filter {
+                    it["trip_id"].asString().bind() == tripId
+                }.asJson()
+
+                node["stops"] = jArray {
+                    stops.forEach {
+                        addObject {
+                            "stopCode" += it["stop_id"].asString().bind().removePrefix("par_")
+                            "order" += it["stop_sequence"].asString().bind().toInt()
+                        }
+                    }
+                }
+            }
             .asJson()
     }
 
     private suspend fun extractStops(json: JsonArray): Either<JsonException, JsonArray> = either {
+        println("Extracting stops")
         val result =
             json
                 .mapNotNull { if (!it["stop_id"].asString().bind().contains("par")) null else it }
